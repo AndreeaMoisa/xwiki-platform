@@ -165,6 +165,7 @@ public class IndexRebuilder extends AbstractXWikiRunnable
                         } finally {
                             writer.close();
                         }
+                        writer.close();
                     } catch (IOException ex) {
                         LOGGER.warn("Failed to clean wiki index: {}", ex.getMessage());
                     }
