@@ -895,6 +895,12 @@
         <artifactId>maven-checkstyle-plugin</artifactId>
         <configuration>
           <excludes>
+<<<<<<< HEAD
+=======
+		      **/DeletedDocument.java,
+              **/XWikiConfig.java,
+              **/XWikiConstant.java,
+>>>>>>> 9975f3e... XE-1283 custom cherry-pick c6033f3596db52c18fc54130fb4a8e7db79432c8
               **/XWikiContext.java,
               **/export/html/HtmlPackager.java,
               **/doc/rcs/XWikiRCSArchive.java,
