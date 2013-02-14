@@ -933,6 +933,7 @@
         <artifactId>maven-checkstyle-plugin</artifactId>
         <configuration>
           <excludes>
+		      **/DeletedDocument.java,
               **/XWikiConfig.java,
               **/XWikiConstant.java,
               **/XWikiContext.java,
