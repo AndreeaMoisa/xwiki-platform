@@ -290,6 +290,18 @@
         <property name="visits" type="integer" column="XWS_VISITS" index="XWDS_VISITS" not-null="false" />
     </class>
 
+    <class name="com.xpn.xwiki.stats.impl.DocumentVisitStats" table="xwikistatsdocvisit">
+      <id name="id" type="integer" unsaved-value="undefined">
+          <column name="XWS_ID" not-null="true" />
+          <generator class="assigned" />
+      </id>
+      <property name="number" type="integer" column="XWS_NUMBER" not-null="false" />
+      <property name="name" type="string" column="XWS_NAME" not-null="true" length="255" />
+      <property name="className" type="string" column="XWS_CLASSNAME" length="255" />
+      <property name="userName" type="string" column="XWS_USERNAME" not-null="true" length="255" />
+      <property name="period" type="integer" column="XWS_PERIOD" not-null="true" />
+    </class>
+
     <class name="com.xpn.xwiki.stats.impl.RefererStats" table="xwikistatsreferer">
         <id name="id" type="integer" unsaved-value="undefined">
             <column name="XWR_ID" not-null="true" />

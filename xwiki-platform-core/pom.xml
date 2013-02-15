@@ -330,6 +330,7 @@
                 <exclude>com/xpn/xwiki/plugin/activitystream/api/ActivityEvent</exclude>
                 <exclude>com/xpn/xwiki/plugin/activitystream/plugin/ActivityEvent</exclude>
                 <exclude>com/xpn/xwiki/user/api/XWikiRightService</exclude>
+                <exclude>com/xpn/xwiki/stats/api/XWikiStatsService</exclude>
                 <!-- Moved to legacy -->
                 <exclude>org/xwiki/bridge/AttachmentNameFactory</exclude>
                 <exclude>org/xwiki/bridge/AttachmentNameSerializer</exclude>

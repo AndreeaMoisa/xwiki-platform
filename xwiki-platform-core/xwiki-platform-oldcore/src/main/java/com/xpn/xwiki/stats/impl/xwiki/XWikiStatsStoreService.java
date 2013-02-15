@@ -31,11 +31,13 @@ import org.slf4j.LoggerFactory;
 
 import com.xpn.xwiki.XWikiContext;
 import com.xpn.xwiki.doc.XWikiDocument;
+import com.xpn.xwiki.stats.StatsConfiguration;
 import com.xpn.xwiki.stats.impl.StatsUtil;
 import com.xpn.xwiki.stats.impl.VisitStats;
 import com.xpn.xwiki.util.AbstractXWikiRunnable;
 import com.xpn.xwiki.web.DownloadAction;
 import com.xpn.xwiki.web.SaveAction;
+import com.xpn.xwiki.web.Utils;
 import com.xpn.xwiki.web.ViewAction;
 
 /**
@@ -180,8 +182,9 @@ public class XWikiStatsStoreService extends AbstractXWikiRunnable
     }
 
     /**
-     * Add all the statistics to the save queue.
-     * 
+     * Deprecated. See {@link #addStats(XWikiDocument, String, String, XWikiContext)}
+     *
+     * @deprecated
      * @param doc the document.
      * @param action the user action.
      * @param context the XWiki context.
@@ -215,8 +218,47 @@ public class XWikiStatsStoreService extends AbstractXWikiRunnable
     }
 
     /**
+     * Add all the statistics to the save queue.
+     *
+     * @param doc the document.
+     * @param userName the user making the current action.
+     * @param action the user action.
+     * @param context the XWiki context.
+     */
+    public void addStats(XWikiDocument doc, String userName, String action, XWikiContext context)
+    {
+        VisitStats vobject = StatsUtil.findVisit(context);
+        synchronized (vobject) {
+            if (action.equals(ViewAction.VIEW_ACTION)) {
+                // We count page views in the sessions only for the "view" action
+                vobject.incPageViews();
+            } else if (action.equals(SaveAction.ACTION_NAME)) {
+                // We count "save" and "download" actions separately
+                vobject.incPageSaves();
+            } else if (action.equals(DownloadAction.ACTION_NAME)) {
+                // We count "save" and "download" actions separately
+                vobject.incDownloads();
+            }
+
+            addVisitStats(vobject, context);
+
+            boolean isVisit = (vobject.getPageViews() == 1) && (action.equals(ViewAction.VIEW_ACTION));
+
+            addDocumentStats(doc, action, isVisit, context);
+        }
+
+        // In case of a "view" action we want to store document visits and referer info
+        if (action.equals(ViewAction.VIEW_ACTION)) {
+            if (!userName.isEmpty() && Utils.getComponent(StatsConfiguration.class).isUniqueVisitEnabled()) {
+                addDocumentVisitStats(doc, userName, context);
+            }
+            addRefererStats(doc, context);
+        }
+    }
+
+    /**
      * Add visit statistics to the save queue.
-     * 
+     *
      * @param vobject the visit statistics object.
      * @param context the XWiki context.
      */
@@ -254,8 +296,22 @@ public class XWikiStatsStoreService extends AbstractXWikiRunnable
     }
 
     /**
+     * Add document visit statistics to the save queue.
+     *
+     * @param doc the document.
+     * @param userName the user name.
+     * @param context the XWiki context.
+     */
+    private void addDocumentVisitStats(XWikiDocument doc, String userName, XWikiContext context)
+    {
+        Date currentDate = new Date();
+
+        add(new DocumentVisitStatsStoreItem(doc.getFullName(), userName, currentDate, context));
+    }
+
+    /**
      * Add referer statistics to the save queue.
-     * 
+     *
      * @param doc the document.
      * @param context the XWiki context.
      */

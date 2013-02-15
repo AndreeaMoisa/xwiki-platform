@@ -19,7 +19,10 @@
  */
 package com.xpn.xwiki.stats.impl.xwiki;
 
+import java.text.DateFormat;
 import java.text.MessageFormat;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -31,6 +34,8 @@ import java.util.Map;
 
 import org.apache.commons.collections.CollectionUtils;
 import org.joda.time.DateTime;
+import org.joda.time.format.DateTimeFormat;
+import org.joda.time.format.DateTimeFormatter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.xwiki.model.reference.DocumentReference;
@@ -43,9 +48,12 @@ import com.xpn.xwiki.criteria.impl.Period;
 import com.xpn.xwiki.criteria.impl.Range;
 import com.xpn.xwiki.criteria.impl.RangeFactory;
 import com.xpn.xwiki.criteria.impl.Scope;
+import com.xpn.xwiki.stats.StatsConfiguration;
 import com.xpn.xwiki.stats.impl.DocumentStats;
+import com.xpn.xwiki.stats.impl.DocumentUniqueVisitStats;
 import com.xpn.xwiki.stats.impl.RefererStats;
 import com.xpn.xwiki.stats.impl.StatsUtil;
+import com.xpn.xwiki.stats.impl.UniqueVisitStats;
 import com.xpn.xwiki.stats.impl.StatsUtil.PeriodType;
 import com.xpn.xwiki.stats.impl.VisitStats;
 import com.xpn.xwiki.store.XWikiHibernateStore;
@@ -66,6 +74,16 @@ public class XWikiStatsReader
      * Logging tool.
      */
     private static final Logger LOGGER = LoggerFactory.getLogger(XWikiStatsReader.class);
+
+    /**
+     * Date format.
+     */
+    private static final String DAY_FORMAT = "yyyyMMdd";
+
+    /**
+     * Formatter associated with periods that have less than a month.
+     */
+    private static final DateTimeFormatter FORMATTER = DateTimeFormat.forPattern(DAY_FORMAT);
 
     /**
      * Used to convert a proper Document Reference to a string but without the wiki name.
@@ -522,6 +540,188 @@ public class XWikiStatsReader
         }
 
         return stats;
+    }
+
+    /**
+     * Retrieves unique visits statistics.
+     *
+     * @param scope the scope of referred documents to use for filtering the results.
+     * @param period the period of time.
+     * @param range the sub-range to return from the entire result set. Use this parameter for pagination.
+     * @param context the XWiki context.
+     * @return A list of UniqueVisitStats objects
+     */
+    public List<UniqueVisitStats> getUniqueVisitStatistics(Scope scope, Period period, Range range,
+        XWikiContext context)
+    {
+        List<UniqueVisitStats> uniqueVisitStatsList = new ArrayList<UniqueVisitStats>();
+
+        if (Utils.getComponent(StatsConfiguration.class).isUniqueVisitEnabled()) {
+
+            List<Object> paramList = new ArrayList<Object>(2);
+
+            String sortOrder = getHqlSortOrderFromRange(range);
+
+            XWikiHibernateStore store = context.getWiki().getHibernateStore();
+
+            try {
+                String query =
+                    "select max(period), count(distinct userName) from DocumentVisitStats where ? <= period "
+                        + "and period <= ? group by period";
+
+                query += MessageFormat.format(" order by count(distinct userName) {0}, period desc", sortOrder);
+
+                paramList.add(Integer.parseInt(FORMATTER.print(period.getStart())));
+                paramList.add(Integer.parseInt(FORMATTER.print(period.getEnd())));
+
+                List< ? > solist =
+                    store.search(query, range.getAbsoluteSize(), range.getAbsoluteStart(), paramList, context);
+
+                uniqueVisitStatsList = getUniqueVisitStatistics(solist);
+                if (range.getSize() < 0) {
+                    Collections.reverse(uniqueVisitStatsList);
+                }
+            } catch (XWikiException e) {
+                uniqueVisitStatsList = Collections.emptyList();
+            }
+        }
+
+        return uniqueVisitStatsList;
+    }
+
+    /**
+     * Converts the rows retrieved from the database to a list of UniqueVisitStats instances.
+     *
+     * @param resultSet the result of a database query for unique visit statistics.
+     * @return a list of {@link com.xpn.xwiki.stats.impl.UniqueVisitStats} objects.
+     * @see #getUniqueVisitStatistics(Scope, Period, Range, XWikiContext)
+     */
+    private List<UniqueVisitStats> getUniqueVisitStatistics(List< ? > resultSet)
+    {
+        List<UniqueVisitStats> uniqueVisitStatsList = new ArrayList<UniqueVisitStats>(resultSet.size());
+
+        for (Iterator< ? > it = resultSet.iterator(); it.hasNext();) {
+            Object[] result = (Object[]) it.next();
+            try {
+                DateFormat dateFormat = new SimpleDateFormat(DAY_FORMAT);
+                UniqueVisitStats docStats =
+                    new UniqueVisitStats(dateFormat.parse(result[0].toString()),
+                        Integer.parseInt(result[1].toString()));
+                uniqueVisitStatsList.add(docStats);
+            } catch (ParseException e) {
+                LOGGER.error("Faild to get unique visits list", e);
+            }
+        }
+
+        return uniqueVisitStatsList;
+    }
+
+    /**
+     * Retrieves document unique visits statistics.
+     *
+     * @param scope the scope of referred documents to use for filtering the results.
+     * @param period the period of time.
+     * @param range the sub-range to return from the entire result set. Use this parameter for pagination.
+     * @param context the XWiki context.
+     * @return A list of DocumentUniqueVisitStats objects
+     */
+    public List<DocumentUniqueVisitStats> getDocumentUniqueVisitStatistics(Scope scope, Period period, Range range,
+        XWikiContext context)
+    {
+        List<DocumentUniqueVisitStats> documentUniqueVisitStatsList = new ArrayList<DocumentUniqueVisitStats>();
+
+        if (Utils.getComponent(StatsConfiguration.class).isUniqueVisitEnabled()) {
+
+            List<Object> paramList = new ArrayList<Object>(2);
+
+            String sortOrder = getHqlSortOrderFromRange(range);
+
+            XWikiHibernateStore store = context.getWiki().getHibernateStore();
+
+            try {
+                String query =
+                    "select max(name), count(distinct userName) from DocumentVisitStats where ? <= period and "
+                        + "period <= ? group by name";
+
+                query += MessageFormat.format(" order by count(distinct userName) {0}, name asc", sortOrder);
+
+                paramList.add(Integer.parseInt(FORMATTER.print(period.getStart())));
+                paramList.add(Integer.parseInt(FORMATTER.print(period.getEnd())));
+
+                List< ? > solist =
+                    store.search(query, range.getAbsoluteSize(), range.getAbsoluteStart(), paramList, context);
+
+                documentUniqueVisitStatsList = getDocumentUniqueVisitStatistics(solist);
+                if (range.getSize() < 0) {
+                    Collections.reverse(documentUniqueVisitStatsList);
+                }
+            } catch (XWikiException e) {
+                documentUniqueVisitStatsList = Collections.emptyList();
+            }
+        }
+
+        return documentUniqueVisitStatsList;
+    }
+
+    /**
+     * Converts the rows retrieved from the database to a list of DocumentUniqueVisitStats instances.
+     *
+     * @param resultSet the result of a database query for document statistics.
+     * @return a list of {@link com.xpn.xwiki.stats.impl.DocumentUniqueVisitStats} objects.
+     * @see #getDocumentUniqueVisitStatistics(Scope, Period, Range, XWikiContext)
+     */
+    private List<DocumentUniqueVisitStats> getDocumentUniqueVisitStatistics(List< ? > resultSet)
+    {
+        List<DocumentUniqueVisitStats> documentUniqueVisitStatsList =
+            new ArrayList<DocumentUniqueVisitStats>(resultSet.size());
+
+        for (Iterator< ? > it = resultSet.iterator(); it.hasNext();) {
+            Object[] result = (Object[]) it.next();
+            DocumentUniqueVisitStats docStats =
+                new DocumentUniqueVisitStats(result[0].toString(), Integer.parseInt(result[1].toString()));
+            documentUniqueVisitStatsList.add(docStats);
+        }
+
+        return documentUniqueVisitStatsList;
+    }
+
+    /**
+     * Checks if the given user has seen the given page.
+     *
+     * @param period the period of time.
+     * @param userName the user full name.
+     * @param pageName the document full name.
+     * @param context the XWiki context.
+     * @return true if the given user has seen the given page.
+     */
+    public boolean hasSeenPage(Period period, String userName, String pageName, XWikiContext context)
+    {
+        Boolean hasSeenPage = false;
+
+        XWikiHibernateStore store = context.getWiki().getHibernateStore();
+
+        List<Object> paramList = new ArrayList<Object>(2);
+
+        try {
+            String query =
+                "select userName from DocumentVisitStats where userName = ? and name = ? and ? <= period and "
+                    + "period <= ?";
+
+            paramList.add(userName);
+            paramList.add(pageName);
+            paramList.add(Integer.parseInt(FORMATTER.print(period.getStart())));
+            paramList.add(Integer.parseInt(FORMATTER.print(period.getEnd())));
+
+            List< ? > solist = store.search(query, 1, 0, paramList, context);
+
+            if (solist.size() == 1) {
+                hasSeenPage = true;
+            }
+        } catch (XWikiException e) {
+            LOGGER.error("Failed to check if the user has seen the page.", e);
+        }
+
+        return hasSeenPage;
     }
 
     // ////////////////////////////////////////////////////////////////////////////////////////

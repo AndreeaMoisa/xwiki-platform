@@ -175,7 +175,7 @@ public class XWikiStatsServiceImpl implements XWikiStatsService, EventListener
             if (StatsUtil.isWikiStatsEnabled(context)
                 && !StatsUtil.getStorageFilteredUsers(context).contains(
                     this.currentDocumentReferenceResolver.resolve(context.getUser()))) {
-                this.statsRegister.addStats(document, action, context);
+                this.statsRegister.addStats(document, context.getUser(), action, context);
             }
         } catch (Exception e) {
             LOGGER.error("Faild to get filter users list", e);
@@ -214,6 +214,26 @@ public class XWikiStatsServiceImpl implements XWikiStatsService, EventListener
     public List<VisitStats> getVisitStatistics(String action, Period period, Range range, XWikiContext context)
     {
         return this.statsReader.getVisitStatistics(action, period, range, context);
+    }
+
+    @Override
+    public List<UniqueVisitStats> getUniqueVisitStatistics(Scope scope, Period period, Range range,
+        XWikiContext context)
+    {
+        return this.statsReader.getUniqueVisitStatistics(scope, period, range, context);
+    }
+
+    @Override
+    public List<DocumentUniqueVisitStats> getDocumentUniqueVisitStatistics(Scope scope, Period period, Range range,
+        XWikiContext context)
+    {
+        return this.statsReader.getDocumentUniqueVisitStatistics(scope, period, range, context);
+    }
+
+    @Override
+    public boolean hasSeenPage(Period period, String userName, String pageName, XWikiContext context)
+    {
+        return this.statsReader.hasSeenPage(period, userName, pageName, context);
     }
 
     // ////////////////////////////////////////////////////////////////////////////////////////

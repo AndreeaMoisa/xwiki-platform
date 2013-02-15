@@ -31,7 +31,9 @@ import com.xpn.xwiki.criteria.impl.Period;
 import com.xpn.xwiki.criteria.impl.Range;
 import com.xpn.xwiki.criteria.impl.Scope;
 import com.xpn.xwiki.stats.impl.DocumentStats;
+import com.xpn.xwiki.stats.impl.DocumentUniqueVisitStats;
 import com.xpn.xwiki.stats.impl.RefererStats;
+import com.xpn.xwiki.stats.impl.UniqueVisitStats;
 import com.xpn.xwiki.stats.impl.VisitStats;
 
 /**
@@ -83,6 +85,40 @@ public interface XWikiStatsService
      * @return a list of VisitStats objects.
      */
     List<VisitStats> getVisitStatistics(String action, Period period, Range range, XWikiContext context);
+
+    /**
+     * Retrieves unique visits statistics.
+     *
+     * @param scope the scope of referred documents to use for filtering the results.
+     * @param period the period of time.
+     * @param range the sub-range to return from the entire result set. Use this parameter for pagination.
+     * @param context the XWiki context.
+     * @return A list of UniqueVisitStats objects
+     */
+    List<UniqueVisitStats> getUniqueVisitStatistics(Scope scope, Period period, Range range, XWikiContext context);
+
+    /**
+     * Retrieves document unique visits statistics.
+     *
+     * @param scope the scope of referred documents to use for filtering the results.
+     * @param period the period of time.
+     * @param range the sub-range to return from the entire result set. Use this parameter for pagination.
+     * @param context the XWiki context.
+     * @return A list of DocumentUniqueVisitStats objects
+     */
+    List<DocumentUniqueVisitStats> getDocumentUniqueVisitStatistics(Scope scope, Period period, Range range,
+        XWikiContext context);
+
+    /**
+     * Checks if the given user has seen the given page.
+     *
+     * @param period the period of time.
+     * @param userName the user full name.
+     * @param pageName the document full name.
+     * @param context the XWiki context.
+     * @return true if the given user has seen the given page.
+     */
+    boolean hasSeenPage(Period period, String userName, String pageName, XWikiContext context);
 
     /**
      * Retrieves referrer statistics.

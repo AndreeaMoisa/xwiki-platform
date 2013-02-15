@@ -377,3 +377,11 @@ container.persistentDirectory=$xwikiPropertiesContainerPersistentDirectory
 #-# The default is extension/repository in whatever is the general persistent directory.
 # extension.localRepository=extension/repository
 
+#-------------------------------------------------------------------------------------
+# Statistics
+#-------------------------------------------------------------------------------------
+
+#-# Enable unique visit statistics.
+#-#
+#-# The default value is false
+# stats.uniqueVisits = false

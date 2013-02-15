@@ -56,3 +56,5 @@ com.xpn.xwiki.store.hibernate.HibernateAttachmentVersioningStore
 com.xpn.xwiki.store.VoidAttachmentVersioningStore
 com.xpn.xwiki.store.XWikiHibernateRecycleBinStore
 com.xpn.xwiki.store.hibernate.HibernateAttachmentRecycleBinStore
+com.xpn.xwiki.stats.StatsConfiguration
+com.xpn.xwiki.stats.impl.DefaultStatsConfiguration

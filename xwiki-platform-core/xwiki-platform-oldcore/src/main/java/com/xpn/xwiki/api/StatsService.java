@@ -144,8 +144,63 @@ public class StatsService extends Api
     }
 
     /**
+     * Retrieves unique visits statistics.
+     *
+     * @param scope the scope of referred documents to use for filtering the results.
+     * @param period the period of time.
+     * @param range the sub-range to return from the entire result set. Use this parameter for pagination.
+     * @return A list of UniqueVisitStats objects
+     */
+    public List< ? > getUniqueVisitStatistics(Scope scope, Period period, Range range)
+    {
+        List< ? > stats = Collections.emptyList();
+
+        XWikiStatsService statsService = getXWikiContext().getWiki().getStatsService(getXWikiContext());
+        if (statsService != null) {
+            stats = statsService.getUniqueVisitStatistics(scope, period, range, getXWikiContext());
+        }
+
+        return stats;
+    }
+
+    /**
+     * Retrieves document unique visits statistics.
+     *
+     * @param scope the scope of referred documents to use for filtering the results.
+     * @param period the period of time.
+     * @param range the sub-range to return from the entire result set. Use this parameter for pagination.
+     * @return A list of DocumentUniqueVisitStats objects
+     */
+    public List< ? > getDocumentUniqueVisitStatistics(Scope scope, Period period, Range range)
+    {
+        List< ? > stats = Collections.emptyList();
+
+        XWikiStatsService statsService = getXWikiContext().getWiki().getStatsService(getXWikiContext());
+        if (statsService != null) {
+            stats = statsService.getDocumentUniqueVisitStatistics(scope, period, range, getXWikiContext());
+        }
+
+        return stats;
+    }
+
+    /**
+     * Checks if the given user has seen the given page.
+     *
+     * @param period the period of time.
+     * @param userName the user full name.
+     * @param pageName the document full name.
+     * @return true if the given user has seen the given page.
+     */
+    public boolean hasSeenPage(Period period, String userName, String pageName)
+    {
+        XWikiStatsService statsService = getXWikiContext().getWiki().getStatsService(getXWikiContext());
+
+        return statsService.hasSeenPage(period, userName, pageName, getXWikiContext());
+    }
+
+    /**
      * Retrieves referrer statistics.
-     * 
+     *
      * @param domain The domain for which to retrieve statistics. To retrieve statistics for all domains use the empty
      *            string.
      * @param scope The scope of referred documents to use for filtering the results.
