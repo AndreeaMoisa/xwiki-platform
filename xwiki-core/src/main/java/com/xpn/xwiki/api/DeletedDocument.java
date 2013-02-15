@@ -147,6 +147,14 @@ public class DeletedDocument extends Api
      */
     public Document getDocument() throws XWikiException
     {
-        return new Document(deldoc.restoreDocument(null, context), context);
+	     if (hasAdminRights()) {
+            try {
+                return new Document(deldoc.restoreDocument(null, context), context);
+			} catch (XWikiException e) {
+                // Exception
+            }
+        }
+		
+        return null;
     }
 }
