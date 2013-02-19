@@ -96,7 +96,7 @@ public class EditAction extends XWikiAction
                 // Edit a new translation.
                 tdoc = new XWikiDocument(doc.getDocumentReference());
                 tdoc.setLanguage(languageToEdit);
-                tdoc.setDefaultLocale(doc.getDefaultLocale());
+                tdoc.setDefaultLanguage(doc.getDefaultLanguage());
                 // Mark the translation. It's important to know whether a document is a translation or not, especially
                 // for the sheet manager which needs to access the objects using the default document not one of its
                 // translations.
